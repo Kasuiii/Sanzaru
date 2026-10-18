@@ -58,7 +58,7 @@ def main():
             if path.is_file() and path.name not in ("wrangler.json", "wrangler.local.json") and ".vite" not in path.parts:
                 selected.append(path)
     for filename in ("wrangler.production.example.jsonc", "README.md", "DEPLOY-THIS-BUNDLE-TH.md", "MODEL-REPORT-TH.md", "TESTING.md",
-                     "ONNX-RUNTIME-WEB-TH.md", "ASL-SETUP-TH.md", "DEPLOY-CLOUDFLARE-TH.md", "RELEASE_NOTES.md", "vendor/onnxruntime-LICENSE.txt",
+                     "ONNX-RUNTIME-WEB-TH.md", "ASL-SETUP-TH.md", "DEPLOY-CLOUDFLARE-TH.md", "RELEASE_NOTES.md", "vendor/onnxruntime-LICENSE.txt", "vendor/shadcn-tailwind-4.13.0.LICENSE.txt",
                      "docs/testing/asl-model-validation.json", "docs/testing/asl-browser-validation.json", "docs/testing/asl-real-browser.png",
                      "WORKER-URL-FIX-TH.md", "docs/testing/asl-production-page.json", "docs/testing/asl-production-play.png",
                      "PERFORMANCE-ASL-TH.md", "docs/testing/asl-model-validation-640.json", "docs/testing/asl-browser-validation-640.json",

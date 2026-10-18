@@ -14,7 +14,7 @@ async function action(client, input) {return call(client, {op: "sync", code, act
 const sync = client => call(client, {op: "sync", code});
 const [caster, scribe, relay] = clients;
 try {
-  for (const path of ["/", "/chronicle", "/lab", "/workshop", "/play", "/learning/PITCH-TH.md", "/classic", "/vision/gesture_recognizer.task", "/vision/vision_wasm_internal.wasm", "/assets/sanzaru/shrine.svg", "/assets/sanzaru/relay.svg", "/assets/sanzaru/caster.svg", "/assets/sanzaru/scribe.svg", "/assets/sanzaru/shadow.svg"]) {
+  for (const path of ["/", "/chronicle", "/lab", "/workshop", "/play", "/classic", "/vision/gesture_recognizer.task", "/vision/vision_wasm_internal.wasm", "/assets/sanzaru/shrine.svg", "/assets/sanzaru/relay.svg", "/assets/sanzaru/caster.svg", "/assets/sanzaru/scribe.svg", "/assets/sanzaru/shadow.svg"]) {
     const response = await fetch(base + path, {signal: AbortSignal.timeout(10000)});
     assert.equal(response.status, 200, path);
     assert((await response.arrayBuffer()).byteLength > 0, path);

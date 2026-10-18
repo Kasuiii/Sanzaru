@@ -1,0 +1,6 @@
+# Use the same Ultralytics/PyTorch versions as training when possible.
+# Freeze a tested environment after trying your real best.pt.
+ultralytics>=8.3,<9
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
+Pillow>=10.4,<13

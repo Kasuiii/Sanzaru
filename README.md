@@ -1,0 +1,168 @@
+# SANZARU 3.0 — Hand to Heart
+
+เกมเว็บร่วมมือ 3 คนตามแนวคิด Three Wise Monkeys ใช้ **การตรวจอักษร ASL จากภาพด้วย ONNX Runtime Web** เพื่อส่งต่อความหมายและปลดผนึก 5 ด่าน
+
+เวอร์ชันนี้เปลี่ยนหน้าเว็บหลักจากการร่ายคาถาเป็นการเรียนรู้อักษร ASL และการสื่อสารที่เปิดให้ผู้เล่นเลือกตัวช่วยได้ ตัวละครและธีมสามวานรยังอยู่ครบ
+
+**สถานะ:** แปลง `ASL.v2-aslv2.yolo26/asl_runs/yolo26n_asl/weights/best.pt` เป็น ONNX และรวมในเว็บแล้ว รองรับ A–Z และไม่ส่งคำตอบเมื่อเป็น `nothing` ผ่านการเทียบกับ checkpoint, browser WASM, ระบบห้อง D1/R2 ในเครื่อง และ build สำหรับ Cloudflare ดู [MODEL-REPORT-TH.md](MODEL-REPORT-TH.md) สำหรับผลจริง ชุดอัปเดตใน repo นี้ยังไม่ได้ deploy จากรอบงานนี้ และยังไม่ได้ทดสอบกล้อง/ไมค์กับผู้เล่นจริง
+
+รวม ONNX รุ่นเร็ว 384 และรุ่นละเอียด 640 แล้ว ใช้ภาพขยายบริเวณมือ, mirror, confidence 0.50 และ WASM หลายเธรดเมื่อรองรับ ดูผลทดสอบและวิธีอัปเดตเว็บใน [PERFORMANCE-ASL-TH.md](PERFORMANCE-ASL-TH.md)
+
+## เริ่มเปิดเว็บบนเครื่องของคุณ
+
+ติดตั้ง Node.js 22.13 ขึ้นไป (ใช้ Node 24 ตรวจรุ่นนี้) และเปิด terminal ในโฟลเดอร์ `Sanzaru` ที่ clone จาก GitHub แล้ว
+
+```sh
+git clone https://github.com/Kasuiii/Sanzaru.git
+cd Sanzaru
+npm install --global pnpm@11.25.0
+pnpm install --frozen-lockfile
+pnpm setup:local
+pnpm start
+```
+
+เปิด **http://localhost:8787** และปล่อย terminal ทำงานอยู่
+
+- `pnpm setup:local` ทำ build และสร้าง/อัปเดตตาราง D1 จำลองในเครื่อง รวม migration `0002_asl_hand_to_heart.sql`
+- `pnpm start` เปิด Worker จำลองพร้อมฐานข้อมูลและที่เก็บเสียงในเครื่อง ไม่ส่งขึ้นบัญชี Cloudflare
+- ครั้งถัดไปที่ไม่ได้แก้โค้ด ใช้ `pnpm start` ได้เลย หากแก้โค้ดให้ build ใหม่ก่อน
+- เปิด `/play` เลือก **ทดลองกติกาด้วยแป้นพิมพ์** เพื่อเล่นระบบทั้งหมดโดยไม่มี AI จากนั้นใช้ 3 เบราว์เซอร์หรือ 3 โปรไฟล์แยกกันทดสอบ 3 บทบาท
+- `localhost` เป็นเครื่องของผู้เปิด ไม่ใช่ลิงก์ให้เพื่อนต่างเครื่อง ต้องให้เพื่อนเข้าเว็บบนเซิร์ฟเวอร์เดียวกันผ่าน HTTPS
+- ปุ่ม `install:ci` เป็นเครื่องมือสำหรับสภาพแวดล้อมพัฒนา Linux ไม่จำเป็นสำหรับ Windows ของคุณ
+
+## ใช้โมเดล ASL จริง
+
+อ่าน **[ASL-SETUP-TH.md](ASL-SETUP-TH.md)** แล้วทำตามนี้:
+
+1. โปรเจกต์นี้มีโมเดลจริงและ `public/models/asl/manifest.json` พร้อมใช้งานแล้ว ไม่ต้อง export ซ้ำ
+2. ถ้าเปลี่ยน checkpoint ให้ export ตาม [ASL-SETUP-TH.md](ASL-SETUP-TH.md) โดยใช้ `models/asl-class-map.json` สำหรับชุด 27 class นี้
+3. ไฟล์ ONNX มีชื่อพร้อม hash และ manifest สร้างจากชื่อ class/output จริง
+4. รัน `pnpm setup:local` และ `pnpm start` แล้วให้ Iwazaru/Mizaru กดเชื่อมโมเดลและเปิดกล้อง
+5. Browser ลอง WebGPU และใช้ WASM สำรอง ตรวจ fingerprint ทั้งคู่ก่อนเริ่ม ไม่ต้องเปิด Python API ระหว่างเล่น
+
+อ่านคำอธิบายโค้ดทั้งหมดใน [ONNX-RUNTIME-WEB-TH.md](ONNX-RUNTIME-WEB-TH.md)
+
+**MediaPipe ที่รวมมาใช้หาตำแหน่งมือเท่านั้น ไม่ใช่โมเดล ASL** ระบบไม่แปลงชื่อท่าเดิมอย่าง Victory หรือ Closed_Fist เป็นคำตอบ ASL โดยอัตโนมัติ และไม่สร้างผลทำนายจำลองในโหมด AI
+
+## กติกา
+
+| บทบาท | ข้อมูลที่ได้รับ | หน้าที่ |
+|---|---|---|
+| Iwazaru · 言わ猿 | เฉลยอักษรของด่านปัจจุบัน | รอคำขอจาก Kikazaru ทำอักษรด้วยมือ ยืนยันอักษรที่โมเดลตรวจได้ |
+| Kikazaru · 聞か猿 | อักษรที่ตรวจได้จาก Iwazaru | ขอคำตอบ อ่านอักษร อัดเสียงแล้วส่งให้ Mizaru หรือใช้เสียงช่วย |
+| Mizaru · 見猿 | สารเสียงจาก Kikazaru | ฟัง ทำอักษรด้วยมือ แล้วส่งผลจากโมเดลชุดเดียวกันเพื่อตรวจเทียบเฉลย |
+
+เจ้าของห้องเลือกชุดอักษรได้ตั้งแต่ 5–26 ตัว ระบบสุ่ม 5 ตัวไม่ซ้ำเป็น 5 ด่าน ค่าเริ่มต้น A, B, C, L, Y
+
+- ทั้งสามคนกดพร้อม จากนั้นเจ้าของห้องเริ่มเกม
+- ลำดับแต่ละด่าน: Kikazaru ขออักษร → Iwazaru ส่งผลตรวจ → Kikazaru ส่งเสียง → Mizaru ส่งผลตรวจ
+- อักษรที่ส่งเป็น **ผลที่ตรวจได้** ไม่ได้บังคับให้กลายเป็นเฉลย ถ้าผิดสามารถขอทวน ส่งใหม่ และลองใหม่ได้
+- จบเมื่อ Mizaru ตอบตรงกับเฉลยครบ 5 ด่าน ไม่มีเวลานับถอยหลัง ไม่มีแพ้เพราะลองผิด
+- ทุกคนขอพักได้ เจ้าของห้องกลับล็อบบีและหมุนเวียนบทบาทได้ระหว่างรอบ
+- เสียงเป็นคลิปครั้งละไม่เกิน 8 วินาที ไม่ใช่สายสนทนาสด
+- Mizaru กดฟังซ้ำได้ หรือเลือกเปิดอักษรประกอบเสียงจากเมนูการเข้าถึง อักษรนี้มาจากอักษรที่คนกลางส่ง ไม่ใช่ระบบถอดเสียงพูด
+
+รายละเอียดอยู่ใน [PLAY-ASL-TH.md](PLAY-ASL-TH.md)
+
+## หน้าเว็บที่มี
+
+| URL | สิ่งที่ทำได้ |
+|---|---|
+| `/` | หน้าหลักธีม Hand to Heart แนะนำตัวละคร วิธีเล่น ห้าผนึก และจุดมุ่งหมาย |
+| `/play` | สร้าง/เข้าห้อง เลือกบทบาท ตั้งชุดอักษร ตรวจโมเดล เล่นร่วมกัน สรุปและดาวน์โหลดบันทึก |
+| `/lab` | ฝึกอักษร ตรวจกล้อง บันทึกการทดลอง AI 10 ครั้ง และดาวน์โหลด CSV |
+| `/chronicle` | ประวัติสามวานร การตีความสำหรับเกม การเข้าถึง และแหล่งอ้างอิง |
+| `/workshop` | แผนกิจกรรมประมาณ 30 นาที ดาวน์โหลดแผน และแนวทาง pitch |
+| `/classic` | เกมเดิมที่เก็บไว้สำหรับอ้างอิง ไม่ใช่เกม ASL |
+
+การเข้าถึง: ปุ่มตัวอักษรใหญ่ ความต่างสีสูง ลดการเคลื่อนไหว อ่านสถานะด้วยเสียง อักษรประกอบเสียง focus สำหรับคีย์บอร์ด และข้อความสถานะสำหรับตัวอ่านหน้าจอ ไม่ได้อ้างว่าผ่านการรับรอง WCAG หรือรองรับความพิการทุกรูปแบบ
+
+## โครงสร้างโค้ดปัจจุบัน
+
+| ตำแหน่ง | ความรับผิดชอบ |
+|---|---|
+| `app/asl/home.tsx` | หน้าหลักและข้อมูลบทบาท |
+| `app/asl/game.tsx` | ล็อบบี หน้าของแต่ละบทบาท หน้าสรุป และโหมดแป้นพิมพ์ |
+| `app/asl/shell.tsx` | เมนู ตัวช่วยการเข้าถึง ตัวละคร และ SVG ตราผนึก |
+| `app/asl/camera-panel.tsx` | UI กล้อง ผลตรวจ manifest และตัวเลือก WebGPU/WASM |
+| `app/asl/use-asl-camera.ts` | เปิด/ปิดกล้อง หาตำแหน่งมือ ส่งเฟรมเข้า Worker และเก็บความนิ่ง |
+| `app/asl/use-asl-room.ts` | session ของผู้เล่น polling คำสั่งห้อง และส่ง/รับเสียง |
+| `app/asl/voice.tsx` | อัดคลิปเสียง เล่นเสียงจากคนกลาง และเสียงช่วย |
+| `app/asl/learn.tsx` | แบบฝึกกับการทดลอง 10 ครั้ง |
+| `app/asl/philosophy.tsx` | เนื้อหาแนวคิดและการเข้าถึง |
+| `app/asl/workshop.tsx` | เนื้อหาสำหรับผู้จัดกิจกรรมและการ pitch |
+| `app/asl.css` | ดีไซน์และ responsive ของรุ่น ASL แยกจาก CSS เกมเดิม |
+| `lib/asl-shared.ts` | บทบาท อักษร ด่าน และแหล่งอ้างอิง |
+| `lib/asl-browser-model.ts`, `lib/asl-onnx.worker.ts` | โหลดและรัน ONNX ใน dedicated Worker |
+| `lib/asl-onnx.ts` | manifest, letterbox, RGB/NCHW, output decoder, NMS และ fingerprint |
+| `scripts/export-asl-onnx.py`, `scripts/prepare-onnx.mjs` | เตรียมโมเดลและ runtime สำหรับเว็บ |
+| `lib/asl-inference.ts` | ตรวจรูปแบบผลโมเดลและความนิ่งของอักษร |
+| `lib/asl-engine.ts` | กฎเกม สิทธิ์บทบาท เปรียบเทียบคำตอบ และข้อมูลที่แต่ละคนเห็น |
+| `lib/asl-store.ts` | D1 state, revision/CAS, token hash, R2 voice |
+| `lib/asl-http.ts` | จำกัดคำขอ ตรวจ origin และตอบข้อผิดพลาด |
+| `app/api/asl/route.ts` | POST create/join/sync/action |
+| `app/api/asl/voice/route.ts` | อัปโหลดและดาวน์โหลดเสียงตามสิทธิ์ |
+| `db/schema.ts`, `drizzle/0002_asl_hand_to_heart.sql` | ตารางห้อง ASL และ migration |
+| `ai-server/asl_app.py` | Python FastAPI รุ่นก่อน เก็บไว้สำหรับอ้างอิง |
+| `ai-server/asl_core.py` | ตรวจ config, class mapping และจับคู่ detection กับมือ |
+| `ai-server/predictor.py` | adapter ของ Ultralytics ที่ใช้ร่วมกับ API เดิม |
+| `ai-server/asl-config.json` | path โมเดล mapping และ thresholds |
+| `public/vision/` | MediaPipe/WASM ที่โหลดจากเว็บเอง |
+| `tests/asl*.test.mjs`, `ai-server/test_asl_service.py` | ทดสอบกติกา API และเงื่อนไข inference |
+
+`app/academy`, `app/game`, `lib/ritual-*`, `lib/party-*`, `ai-server/app.py` และเอกสาร 2.x เก็บไว้เพื่ออ้างอิงเกมเดิม หน้าเว็บหลักรุ่นนี้ใช้ `app/asl` และ ONNX Runtime Web
+
+## ลำดับข้อมูล
+
+```mermaid
+flowchart TD
+  A[กล้องของ Iwazaru] --> B[ONNX ใน browser ของ Iwazaru]
+  B --> C[Iwazaru ยืนยันอักษร]
+  C --> D[Worker บันทึกผลใน D1]
+  D --> E[Kikazaru เห็นอักษร]
+  E --> F[ส่งเสียงหรือเสียงช่วย]
+  F --> G[Mizaru ฟังและทำอักษร]
+  G --> H[ONNX ใน browser ของ Mizaru]
+  H --> I[Mizaru ยืนยันอักษร]
+  I --> J{Worker เทียบเฉลย}
+  J -->|ตรง| K[เปิดผนึก ไปด่านถัดไป]
+  J -->|ต่าง| G
+```
+
+Browser ของผู้เล่นประมวลผลภาพ ส่วน Cloudflare Worker เก็บกติกาเกม D1 เก็บห้องและผลคำสั่ง ส่วน R2 เก็บเฉพาะคลิปเสียง เว็บไม่ได้ส่งวิดีโอของผู้เล่นให้กัน
+
+## ตรวจโปรเจกต์
+
+```sh
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm check:deploy
+```
+
+ทดสอบ exporter helpers โดยไม่โหลด weights:
+
+```sh
+python -m unittest discover -s tests -p test_export_asl_onnx.py
+node tests/asl-browser-smoke.mjs --built
+```
+
+อ่าน [TESTING.md](TESTING.md) เพื่อแยกผลที่ทดสอบแล้วออกจากสิ่งที่ยังต้องทดสอบกับกล้องและผู้เล่นจริง
+
+## Deploy และข้อมูล
+
+อ่าน [DEPLOY-CLOUDFLARE-TH.md](DEPLOY-CLOUDFLARE-TH.md) หากต้องการให้เพื่อนเข้าได้จากนอกเครื่อง ต้องมี Worker + D1 และ R2 สำหรับคลิปเสียง ส่วน ONNX รันใน browser โดยเตรียมโมเดล/runtime ก่อน build ตาม ASL-SETUP-TH.md
+
+session ห้องเก็บใน `sessionStorage` ของแท็บ token ไม่อยู่ในลิงก์เชิญ DB เก็บเฉพาะ hash ของ token ไม่มีระบบบัญชีหรือการกู้สิทธิ์ผู้เล่นที่ปิดแท็บแล้ว ข้อมูลห้องหมดสิทธิ์เข้าเมื่อไม่มีการใช้งาน 2 ชั่วโมง แต่การลบไฟล์เสียงจริงเป็นการกวาดเมื่อมีการสร้างห้องใหม่หรือกฎอายุ R2 ที่เจ้าของระบบตั้งเอง
+
+ผล AI ที่ส่งเข้าห้องเป็นรายงานจาก browser ไม่ใช่หลักฐานเข้ารหัสจากเซิร์ฟเวอร์โมเดล จึงไม่ใช่ระบบป้องกันโกงสำหรับการแข่งขันที่มีรางวัล
+
+## ขอบเขตการเรียนรู้
+
+นี่คือ **ASL fingerspelling แบบอักษรท่านิ่ง** ไม่ใช่ระบบแปล ASL ทั้งภาษา และไม่ใช่ภาษามือไทย J/Z เลือกได้เมื่อโมเดลรองรับ แต่ตรวจได้เพียง class จากภาพตามชุดฝึก ยังไม่ตรวจการเคลื่อนไหวครบรูปแบบ การตั้งเป้าช่วยการเรียนรู้และการเข้าถึงต้องตรวจด้วยผู้ใช้จริง ไม่เท่ากับมีหลักฐานผลสัมฤทธิ์หรือการฟื้นฟูแล้ว ดู [ACCESSIBILITY.md](ACCESSIBILITY.md) และ [PITCH-ASL-TH.md](PITCH-ASL-TH.md)
+
+## ไฟล์ใน GitHub
+
+Repo รวม source, migration, UI assets, MediaPipe และ ONNX สองรุ่นที่เว็บต้องใช้ รัน `pnpm install --frozen-lockfile` แล้ว `pnpm setup:local` ได้โดยไม่ต้องมี Python หรือ dataset ขั้นตอน build สร้าง ONNX Runtime จาก dependency ที่ล็อกเวอร์ชันไว้
+
+ไม่รวม dataset ฝึก, best.pt, Python environment, node_modules, dist, .env, state ของฐานข้อมูล และ wrangler.production.jsonc ของบัญชีจริง หากต้องการ export/ประเมินใหม่ ให้นำ checkpoint และ dataset ของทีมกลับมาไว้ตาม ASL-SETUP-TH.md

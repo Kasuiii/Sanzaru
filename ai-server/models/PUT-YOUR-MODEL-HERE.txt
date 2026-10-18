@@ -1,0 +1,8 @@
+รุ่น ASL 3.0: วางโมเดลของคุณเป็น ai-server/models/asl-best.pt
+ตั้งค่าที่ ai-server/asl-config.json และรัน asl_app:app ที่ port 8001
+รองรับ Ultralytics task detect หรือ classify ไม่รองรับ .pt ทุกชนิดโดยอัตโนมัติ
+ไม่มี ASL weights รวมมาใน ZIP นี้ โปรดใช้ไฟล์ที่คุณฝึกและเชื่อถือ
+อย่าวาง .pt ใน public/ หรือ public/vision/
+อ่าน ASL-SETUP-TH.md ที่โฟลเดอร์หลัก
+
+ไฟล์ best.pt และ model-config.json ใช้กับเกมคาถา 2.x เดิมเท่านั้น

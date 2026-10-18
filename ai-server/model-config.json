@@ -1,0 +1,21 @@
+{
+  "model_path": "models/best.pt",
+  "image_size": 640,
+  "confidence": 0.65,
+  "iou": 0.45,
+  "device": "cpu",
+  "input_mode": "full-frame",
+  "association_overlap": 0.25,
+  "class_map": {
+    "Closed_Fist": "Closed_Fist",
+    "Open_Palm": "Open_Palm",
+    "Victory": "Victory",
+    "Thumb_Up": "Thumb_Up",
+    "fist": "Closed_Fist",
+    "palm": "Open_Palm",
+    "victory": "Victory",
+    "thumb_up": "Thumb_Up",
+    "background": "None",
+    "neutral": "None"
+  }
+}

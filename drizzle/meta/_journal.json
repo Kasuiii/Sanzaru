@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1791146516021,
+      "tag": "0000_melted_sebastian_shaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1791217760737,
+      "tag": "0001_kind_donald_blake",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792259128650,
+      "tag": "0002_asl_hand_to_heart",
+      "breakpoints": true
+    }
+  ]
+}

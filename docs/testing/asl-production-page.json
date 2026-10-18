@@ -1,0 +1,38 @@
+{
+  "createdAt": "2026-10-18T16:37:25.903Z",
+  "description": "Actual built /lab and /play with real Worker/runtime/model. getUserMedia is intentionally blocked after model warm-up; no physical camera is accessed.",
+  "pages": {
+    "/lab": {
+      "page": "/lab",
+      "isolated": true,
+      "workerUrls": [
+        "http://127.0.0.1:8793/_next/static/asl-onnx.worker-DmsmEdII.js"
+      ],
+      "modelReady": true,
+      "cameraBlocked": true,
+      "errors": [],
+      "provider": "wasm",
+      "modelId": "afb461aca355df32161cf3cc578a667a822e67d561ef170bb0d3d3aa6ef2de5f",
+      "threads": 4,
+      "workerIsolated": true
+    },
+    "/play": {
+      "page": "/play",
+      "isolated": true,
+      "workerUrls": [
+        "http://127.0.0.1:8793/_next/static/asl-onnx.worker-DmsmEdII.js"
+      ],
+      "modelReady": true,
+      "cameraBlocked": true,
+      "errors": [],
+      "provider": "wasm",
+      "modelId": "afb461aca355df32161cf3cc578a667a822e67d561ef170bb0d3d3aa6ef2de5f",
+      "threads": 4,
+      "workerIsolated": true
+    }
+  },
+  "clientChunks": {
+    "camera-panel-C7jfMlWN.js": "3aa2c9e36a190f1060f807ec38b212e2299a6b9a5c8cf91ac01b744f0e85df3e"
+  },
+  "passed": true
+}

@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import ts from 'typescript';
+const url=code=>'data:text/javascript;base64,'+Buffer.from(code).toString('base64');
+const compile=p=>ts.transpileModule(fs.readFileSync(new URL(p,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const content=url(compile('../lib/learning-content.ts')),shared=url(compile('../lib/ritual-shared.ts'));
+const {emptyJournal,decodeJournal,putRound,journalMarkdown,workshopMarkdown}=await import(url(compile('../lib/learning.ts').replace('"./learning-content"',JSON.stringify(content)).replace('"./ritual-shared"',JSON.stringify(shared))));
+const {WORKSHOP_BLOCKS}=await import(content);
+for(const bad of [null,'','{broken','null','[]','{"version":99}'])assert.deepEqual(decodeJournal(bad),emptyJournal(),'unreadable storage must recover without crashing');
+const round={id:'room-expiry-1-player',at:'2026-10-16T10:00:00.000Z',role:'relay',round:1,outcome:'lost',stage:3,total:5,score:3000,strikes:5,goal:'restate',before:2,after:4,moment:'เราคิดว่าเพื่อนส่งเลขครบ',next:'ทวนเลขก่อนเริ่ม'};
+const valid={...emptyJournal(),goal:'restate',before:2,choices:{see:{choice:2,reason:'ต้องมีบริบท'}},evidence:{sent:'fact'},rounds:[round]};
+assert.deepEqual(decodeJournal(JSON.stringify(valid)),valid,'valid records must round-trip');
+const malformed=decodeJournal(JSON.stringify({version:1,goal:'invented',before:100,choices:{see:{choice:999},hear:{choice:0,reason:'ก'.repeat(1400)}},evidence:{sent:'invented',careless:'inference'},rounds:[{...round,stage:99},{...round,at:'yesterday'},{...round,score:-10},{...round,role:'admin'}, {...round,moment:{bad:true},before:9,extraSecret:'never retain this'}]}));
+assert.equal(malformed.goal,'verify');assert.equal(malformed.before,null);assert.equal(malformed.choices.see,undefined);assert.equal(malformed.choices.hear.reason.length,1200);assert.equal(malformed.evidence.sent,undefined);assert.equal(malformed.rounds.length,1);assert.equal(malformed.rounds[0].moment,'');assert.equal(malformed.rounds[0].before,null);assert.equal('extraSecret' in malformed.rounds[0],false);
+let journal=emptyJournal();for(let i=0;i<36;i++)journal=putRound(journal,{...round,id:'round-'+i,round:i+1});
+assert.equal(journal.rounds.length,30);assert.equal(journal.rounds[0].id,'round-35');assert.equal(journal.rounds.at(-1).id,'round-6');
+journal=putRound(journal,{...round,id:'round-20',next:'แก้บันทึกเดิม'});assert.equal(journal.rounds.length,30);assert.equal(journal.rounds.filter(r=>r.id==='round-20').length,1);assert.equal(journal.rounds[0].next,'แก้บันทึกเดิม');
+const exportText=journalMarkdown(valid);assert.match(exportText,/ต้องมีบริบท/);assert.match(exportText,/มิซารุ/);assert.match(exportText,/ผนึก 3\/5/);assert.match(exportText,/ทวนก่อนส่ง/);assert.match(exportText,/ไม่ใช่คะแนนความสามารถ/);
+for(const [minutes,blocks] of Object.entries(WORKSHOP_BLOCKS)){assert.equal(blocks.reduce((sum,b)=>sum+b.minutes,0),Number(minutes));assert.match(workshopMarkdown(Number(minutes),4),/ผู้เล่น: 12 คน/);}
+assert.match(workshopMarkdown(99,Infinity),/30 นาที/);assert.match(workshopMarkdown(20,999),/จำนวนทีม: 30/);assert.match(workshopMarkdown(20,-4),/จำนวนทีม: 1/);assert.match(workshopMarkdown(20,2.9),/ผู้เล่น: 6 คน/);
+console.log('PASS: journal corruption recovery, record validation, bounded history, duplicate-save replacement, Thai exports, accurate 20/30/45-minute plans and invalid group-count handling.');

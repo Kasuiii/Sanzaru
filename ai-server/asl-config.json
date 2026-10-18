@@ -1,0 +1,15 @@
+{
+  "model_path": "models/asl-best.pt",
+  "image_size": 640,
+  "confidence": 0.75,
+  "iou": 0.45,
+  "device": "cpu",
+  "input_mode": "full-frame",
+  "association_overlap": 0.25,
+  "class_map": {
+    "A":"A", "B":"B", "C":"C", "D":"D", "E":"E", "F":"F", "G":"G", "H":"H", "I":"I",
+    "J":"None", "K":"K", "L":"L", "M":"M", "N":"N", "O":"O", "P":"P", "Q":"Q", "R":"R",
+    "S":"S", "T":"T", "U":"U", "V":"V", "W":"W", "X":"X", "Y":"Y", "Z":"None",
+    "nothing":"None", "background":"None", "space":"None", "del":"None"
+  }
+}

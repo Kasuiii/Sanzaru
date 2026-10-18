@@ -63,3 +63,7 @@ ai-server/requirements-working.txt
 /.venv-export/
 /ASL.v2-aslv2.yolo26/
 /release/
+
+# Explanatory documents stay local; publish only the project README.
+*.md
+!/README.md

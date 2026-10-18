@@ -4,9 +4,9 @@
 
 เวอร์ชันนี้เปลี่ยนหน้าเว็บหลักจากการร่ายคาถาเป็นการเรียนรู้อักษร ASL และการสื่อสารที่เปิดให้ผู้เล่นเลือกตัวช่วยได้ ตัวละครและธีมสามวานรยังอยู่ครบ
 
-**สถานะ:** แปลง `ASL.v2-aslv2.yolo26/asl_runs/yolo26n_asl/weights/best.pt` เป็น ONNX และรวมในเว็บแล้ว รองรับ A–Z และไม่ส่งคำตอบเมื่อเป็น `nothing` ผ่านการเทียบกับ checkpoint, browser WASM, ระบบห้อง D1/R2 ในเครื่อง และ build สำหรับ Cloudflare ดู [MODEL-REPORT-TH.md](MODEL-REPORT-TH.md) สำหรับผลจริง ชุดอัปเดตใน repo นี้ยังไม่ได้ deploy จากรอบงานนี้ และยังไม่ได้ทดสอบกล้อง/ไมค์กับผู้เล่นจริง
+**สถานะ:** แปลง checkpoint `best.pt` ของทีมเป็น ONNX และรวมในเว็บแล้ว รองรับ A–Z และไม่ส่งคำตอบเมื่อเป็น `nothing` ผ่านการเทียบกับ checkpoint, browser WASM, ระบบห้อง D1/R2 ในเครื่อง และ build สำหรับ Cloudflare ชุดอัปเดตนี้ยังไม่ได้ deploy จากรอบงานนี้ และยังไม่ได้ทดสอบกล้อง/ไมค์กับผู้เล่นจริง
 
-รวม ONNX รุ่นเร็ว 384 และรุ่นละเอียด 640 แล้ว ใช้ภาพขยายบริเวณมือ, mirror, confidence 0.50 และ WASM หลายเธรดเมื่อรองรับ ดูผลทดสอบและวิธีอัปเดตเว็บใน [PERFORMANCE-ASL-TH.md](PERFORMANCE-ASL-TH.md)
+รวม ONNX รุ่นเร็ว 384 และรุ่นละเอียด 640 แล้ว ใช้ภาพขยายบริเวณมือ, mirror, confidence 0.50 และ WASM หลายเธรดเมื่อรองรับ
 
 ## เริ่มเปิดเว็บบนเครื่องของคุณ
 
@@ -32,15 +32,15 @@ pnpm start
 
 ## ใช้โมเดล ASL จริง
 
-อ่าน **[ASL-SETUP-TH.md](ASL-SETUP-TH.md)** แล้วทำตามนี้:
+โมเดลทั้งสองขนาดมาจาก checkpoint เดียวกัน เป็น YOLO26n FP32, ONNX opset 17, input `[1,3,S,S]` และ output `[1,300,6]` แบบ end-to-end:
 
 1. โปรเจกต์นี้มีโมเดลจริงและ `public/models/asl/manifest.json` พร้อมใช้งานแล้ว ไม่ต้อง export ซ้ำ
-2. ถ้าเปลี่ยน checkpoint ให้ export ตาม [ASL-SETUP-TH.md](ASL-SETUP-TH.md) โดยใช้ `models/asl-class-map.json` สำหรับชุด 27 class นี้
+2. เลือก **384 · เร็ว** เป็นค่าเริ่มต้น หรือ **640 · รายละเอียดสูง** ในตั้งค่าโมเดลของทีม ทั้งสองผู้เล่น AI ต้องใช้โปรไฟล์เดียวกัน
 3. ไฟล์ ONNX มีชื่อพร้อม hash และ manifest สร้างจากชื่อ class/output จริง
 4. รัน `pnpm setup:local` และ `pnpm start` แล้วให้ Iwazaru/Mizaru กดเชื่อมโมเดลและเปิดกล้อง
 5. Browser ลอง WebGPU และใช้ WASM สำรอง ตรวจ fingerprint ทั้งคู่ก่อนเริ่ม ไม่ต้องเปิด Python API ระหว่างเล่น
 
-อ่านคำอธิบายโค้ดทั้งหมดใน [ONNX-RUNTIME-WEB-TH.md](ONNX-RUNTIME-WEB-TH.md)
+หากเปลี่ยน checkpoint ใช้ `python scripts/export-asl-onnx.py --help` เพื่อดูพารามิเตอร์ export และ `models/asl-class-map.json` สำหรับชุด 27 class นี้ ต้องมี Python/Ultralytics เฉพาะขั้นตอน export และทดสอบโมเดลใหม่
 
 **MediaPipe ที่รวมมาใช้หาตำแหน่งมือเท่านั้น ไม่ใช่โมเดล ASL** ระบบไม่แปลงชื่อท่าเดิมอย่าง Victory หรือ Closed_Fist เป็นคำตอบ ASL โดยอัตโนมัติ และไม่สร้างผลทำนายจำลองในโหมด AI
 
@@ -61,8 +61,6 @@ pnpm start
 - ทุกคนขอพักได้ เจ้าของห้องกลับล็อบบีและหมุนเวียนบทบาทได้ระหว่างรอบ
 - เสียงเป็นคลิปครั้งละไม่เกิน 8 วินาที ไม่ใช่สายสนทนาสด
 - Mizaru กดฟังซ้ำได้ หรือเลือกเปิดอักษรประกอบเสียงจากเมนูการเข้าถึง อักษรนี้มาจากอักษรที่คนกลางส่ง ไม่ใช่ระบบถอดเสียงพูด
-
-รายละเอียดอยู่ใน [PLAY-ASL-TH.md](PLAY-ASL-TH.md)
 
 ## หน้าเว็บที่มี
 
@@ -110,7 +108,7 @@ pnpm start
 | `public/vision/` | MediaPipe/WASM ที่โหลดจากเว็บเอง |
 | `tests/asl*.test.mjs`, `ai-server/test_asl_service.py` | ทดสอบกติกา API และเงื่อนไข inference |
 
-`app/academy`, `app/game`, `lib/ritual-*`, `lib/party-*`, `ai-server/app.py` และเอกสาร 2.x เก็บไว้เพื่ออ้างอิงเกมเดิม หน้าเว็บหลักรุ่นนี้ใช้ `app/asl` และ ONNX Runtime Web
+`app/academy`, `lib/ritual-*`, `lib/party-*` และ `ai-server/app.py` เก็บไว้เพื่ออ้างอิงเกมเดิม หน้าเว็บหลักรุ่นนี้ใช้ `app/asl` และ ONNX Runtime Web
 
 ## ลำดับข้อมูล
 
@@ -147,11 +145,39 @@ python -m unittest discover -s tests -p test_export_asl_onnx.py
 node tests/asl-browser-smoke.mjs --built
 ```
 
-อ่าน [TESTING.md](TESTING.md) เพื่อแยกผลที่ทดสอบแล้วออกจากสิ่งที่ยังต้องทดสอบกับกล้องและผู้เล่นจริง
+ผล benchmark ใน Chromium/Windows เครื่องทดสอบ ใช้ภาพที่เตรียมไว้และไม่เปิดกล้อง:
+
+| รุ่น / Backend | เธรด | median | p95 |
+|---|---:|---:|---:|
+| 384 / WASM | 4 | 44 ms | 98 ms |
+| 384 / Auto → WASM | 4 | 50 ms | 65 ms |
+| 384 / WASM ไม่มี isolation | 1 | 105 ms | 171 ms |
+| 640 / WASM | 4 | 282 ms | 360 ms |
+
+เวลารวม Worker messaging, เตรียมภาพ และ ONNX แต่ไม่รวมกล้อง, MediaPipe หรือ decode ภาพ จึงไม่รับประกันเวลาเดียวกันบนทุกเครื่อง ดูข้อมูลดิบใน [รายงาน browser](docs/testing/asl-browser-validation.json)
+
+เทียบ tensor เดียวกันระหว่าง `.pt` กับ ONNX ผ่าน 54/54 ภาพทั้งสองขนาด รุ่น 384 ตอบอักษรถูก 49/52 และงดตอบ 3; nothing งดตอบ 2/2 นี่เป็นตัวอย่างที่เลือกไว้ ไม่ใช่ accuracy ทั้ง dataset ดู [รายงานโมเดล](docs/testing/asl-model-validation.json)
+
+ผ่าน typecheck, 11 test scripts, exporter tests และ production build รายงานการกดหน้า `/lab` กับ `/play` เป็นผลก่อน rebuild ครั้งสุดท้ายที่ลบ import ไม่ได้ใช้และเพิ่มคำอธิบาย lint ไม่ได้กดทดสอบหน้าเว็บซ้ำหลังจากนั้น และยังไม่ได้ยืนยัน WebGPU จริงหรือระยะตรวจมือจากกล้องจริง
 
 ## Deploy และข้อมูล
 
-อ่าน [DEPLOY-CLOUDFLARE-TH.md](DEPLOY-CLOUDFLARE-TH.md) หากต้องการให้เพื่อนเข้าได้จากนอกเครื่อง ต้องมี Worker + D1 และ R2 สำหรับคลิปเสียง ส่วน ONNX รันใน browser โดยเตรียมโมเดล/runtime ก่อน build ตาม ASL-SETUP-TH.md
+ใช้ Cloudflare Worker + D1 สำหรับห้องเกม และ R2 สำหรับคลิปเสียง ส่วน ONNX รันใน browser
+
+1. รัน `pnpm exec wrangler login` แล้วใช้ D1/R2 ที่มีอยู่ หรือสร้างด้วย `pnpm exec wrangler d1 create sanzaru-db` และ `pnpm exec wrangler r2 bucket create sanzaru-voice`
+2. คัดลอก `wrangler.production.example.jsonc` เป็น `wrangler.production.jsonc` ใส่ชื่อ Worker, D1 `database_name`/`database_id` และ R2 `bucket_name` จริง คงชื่อ binding `DB` และ `BUCKET`
+3. Build แล้ว apply migrations และ deploy ด้วย config บัญชีของคุณ:
+
+```sh
+pnpm build
+pnpm check:deploy --config wrangler.production.jsonc
+pnpm exec wrangler d1 migrations apply DB --remote --config wrangler.production.jsonc
+pnpm exec wrangler deploy --config wrangler.production.jsonc
+```
+
+ถ้าอัปเดตเว็บเดิมจาก **ZIP ที่ build แล้ว** ให้แตกลงโฟลเดอร์ใหม่ นำ `wrangler.production.jsonc` เดิมมาไว้ข้าง `dist/` แล้วรัน `npx wrangler@4.92.0 deploy --config wrangler.production.jsonc` ไม่ต้องติดตั้ง Python หรือ build ใหม่ รุ่น performance ไม่เพิ่ม schema จากรุ่น ASL เดิม
+
+หลัง deploy ให้รีเฟรชด้วย Ctrl+Shift+R ใช้โปรไฟล์ 384 และสร้างห้องใหม่หรือกลับล็อบบีให้ผู้เล่น AI เชื่อมโมเดลชุดเดียวกัน ในรายละเอียดกล้องดูขนาดภาพ จำนวนเธรด และเวลาแต่ละขั้น หากไม่มี cross-origin isolation จะใช้ WASM 1 เธรด ต้องอัปโหลดทั้ง `dist/server`, `dist/client` และ `_headers` ในชุดเดียวกัน
 
 session ห้องเก็บใน `sessionStorage` ของแท็บ token ไม่อยู่ในลิงก์เชิญ DB เก็บเฉพาะ hash ของ token ไม่มีระบบบัญชีหรือการกู้สิทธิ์ผู้เล่นที่ปิดแท็บแล้ว ข้อมูลห้องหมดสิทธิ์เข้าเมื่อไม่มีการใช้งาน 2 ชั่วโมง แต่การลบไฟล์เสียงจริงเป็นการกวาดเมื่อมีการสร้างห้องใหม่หรือกฎอายุ R2 ที่เจ้าของระบบตั้งเอง
 
@@ -159,10 +185,14 @@ session ห้องเก็บใน `sessionStorage` ของแท็บ to
 
 ## ขอบเขตการเรียนรู้
 
-นี่คือ **ASL fingerspelling แบบอักษรท่านิ่ง** ไม่ใช่ระบบแปล ASL ทั้งภาษา และไม่ใช่ภาษามือไทย J/Z เลือกได้เมื่อโมเดลรองรับ แต่ตรวจได้เพียง class จากภาพตามชุดฝึก ยังไม่ตรวจการเคลื่อนไหวครบรูปแบบ การตั้งเป้าช่วยการเรียนรู้และการเข้าถึงต้องตรวจด้วยผู้ใช้จริง ไม่เท่ากับมีหลักฐานผลสัมฤทธิ์หรือการฟื้นฟูแล้ว ดู [ACCESSIBILITY.md](ACCESSIBILITY.md) และ [PITCH-ASL-TH.md](PITCH-ASL-TH.md)
+นี่คือ **ASL fingerspelling แบบอักษรท่านิ่ง** ไม่ใช่ระบบแปล ASL ทั้งภาษา และไม่ใช่ภาษามือไทย J/Z เลือกได้เมื่อโมเดลรองรับ แต่ตรวจได้เพียง class จากภาพตามชุดฝึก ยังไม่ตรวจการเคลื่อนไหวครบรูปแบบ การตั้งเป้าช่วยการเรียนรู้และการเข้าถึงต้องตรวจด้วยผู้ใช้จริง ไม่เท่ากับมีหลักฐานผลสัมฤทธิ์หรือการฟื้นฟูแล้ว
 
 ## ไฟล์ใน GitHub
 
 Repo รวม source, migration, UI assets, MediaPipe และ ONNX สองรุ่นที่เว็บต้องใช้ รัน `pnpm install --frozen-lockfile` แล้ว `pnpm setup:local` ได้โดยไม่ต้องมี Python หรือ dataset ขั้นตอน build สร้าง ONNX Runtime จาก dependency ที่ล็อกเวอร์ชันไว้
 
-ไม่รวม dataset ฝึก, best.pt, Python environment, node_modules, dist, .env, state ของฐานข้อมูล และ wrangler.production.jsonc ของบัญชีจริง หากต้องการ export/ประเมินใหม่ ให้นำ checkpoint และ dataset ของทีมกลับมาไว้ตาม ASL-SETUP-TH.md
+ไม่รวม dataset ฝึก, best.pt, Python environment, node_modules, dist, .env, state ของฐานข้อมูล และ wrangler.production.jsonc ของบัญชีจริง หากต้องการ export/ประเมินใหม่ ให้นำ checkpoint และ dataset ของทีมกลับมาไว้ในเครื่อง
+
+เอกสาร Markdown คำอธิบายอื่นเก็บในเครื่องเจ้าของโปรเจกต์ Git ติดตามเฉพาะ README นี้ ส่วนรายงานทดสอบ JSON และไฟล์ license ยังคงรวมไว้
+
+Dataset metadata ของทีมระบุ Roboflow workspace `0722s-workspace`, project `asl-9evyq`, version 2, CC BY 4.0: [แหล่งข้อมูล ASL](https://app.roboflow.com/0722s-workspace/asl-9evyq/2) เป็น attribution ของชุดข้อมูล ไม่ใช่การกำหนด license รวมของ dependencies หรือ weights ดู license ของ runtime/assets ใน `vendor/` และ `public/vision/`

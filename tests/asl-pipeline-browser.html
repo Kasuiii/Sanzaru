@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>MediaPipe + ONNX pipeline test</title>
+<style>body{background:#101b26;color:#e0f5ef;font:16px system-ui;margin:32px;max-width:1100px}button{padding:12px 24px}pre{white-space:pre-wrap;line-height:1.5}</style>
+<h1>Real MediaPipe → hand crop → ONNX</h1>
+<p>54 fixed test images. No annotation boxes supplied to the tracker. No physical camera. Image results do not establish live camera accuracy or distance.</p>
+<button id="run">Run full pipeline</button><pre id="output">Ready</pre>
+<script type="module">
+import {FilesetResolver,GestureRecognizer} from '/vision/vision_bundle.mjs';
+import {AslBrowserModel} from '/client.js';
+import {handBounds} from '/hand-bounds.js';
+const output=document.querySelector('#output'),button=document.querySelector('#run');
+const log=t=>output.textContent+='\n'+t;
+button.onclick=async()=>{
+ button.disabled=true;output.textContent='Loading real models';
+ const report={createdAt:new Date().toISOString(),description:'Real MediaPipe GestureRecognizer landmarks + production crop/mirror + real ONNX, fixed original test JPEGs; no annotations used for hand localization.',samples:[]};
+ let tracker,engine;
+ try{
+  const fixtures=await(await fetch('/reference.json')).json();report.modelSha256=fixtures.modelSha256;
+  const vision=await FilesetResolver.forVisionTasks('/vision');
+  tracker=await GestureRecognizer.createFromOptions(vision,{baseOptions:{modelAssetPath:'/vision/gesture_recognizer.task',delegate:'CPU'},runningMode:'IMAGE',numHands:2,minHandDetectionConfidence:.5,minHandPresenceConfidence:.5,minTrackingConfidence:.5});
+  engine=new AslBrowserModel(log);const info=await engine.load(location.origin+'/models/asl/manifest.json','wasm');
+  report.modelId=info.health.modelId;report.threads=info.threads;report.isolated=crossOriginIsolated;
+  for(const sample of fixtures.samples){
+   const image=await createImageBitmap(await(await fetch('/original/'+encodeURIComponent(sample.file))).blob());
+   const start=performance.now(),hands=tracker.recognize(image),handMs=performance.now()-start;
+   const box=hands.landmarks.length===1?handBounds(hands.landmarks[0]):null;
+   let prediction={letter:null,confidence:0};
+   if(box)prediction=await engine.predict(image,box);else image.close();
+   report.samples.push({file:sample.file,expected:sample.expected,hands:hands.landmarks.length,handMs,box,...prediction,totalMs:performance.now()-start});
+  }
+  const s=report.samples,accepted=s.filter(s=>s.letter),high=s.filter(s=>s.letter&&s.confidence>.9);
+  const times=s.filter(s=>s.box).map(s=>s.totalMs).sort((a,b)=>a-b);
+  report.summary={tested:s.length,singleHand:s.filter(s=>s.hands===1).length,accepted:accepted.length,correctAccepted:accepted.filter(s=>s.letter===s.expected).length,wrongAccepted:accepted.filter(s=>s.letter!==s.expected).length,above90:high.length,correctAbove90:high.filter(s=>s.letter===s.expected).length,p50Ms:times[Math.floor(times.length*.5)],p95Ms:times[Math.ceil(times.length*.95)-1]};
+  report.passed=true;log(JSON.stringify(report.summary,null,2));log('COMPLETED: measured outcomes, not a claim of perfect accuracy.');
+ }catch(error){report.passed=false;report.error=String(error.stack);log(report.error);}
+ finally{tracker?.close();engine?.close();await fetch('/pipeline-results',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(report)});button.disabled=false;}
+};
+</script></html>

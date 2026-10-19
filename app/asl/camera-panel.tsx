@@ -4,11 +4,13 @@ import { useEffect, useId, useState } from "react";
 import { Camera, CameraOff, ChevronDown, Settings2, ShieldCheck, Volume2 } from "lucide-react";
 import type { AslCamera } from "./use-asl-camera";
 import type { BrowserProvider } from "@/lib/asl-browser-model";
+import type { AslSample } from "@/lib/asl-inference";
 import { speakAloud } from "./shell";
-export function CameraPanel({ camera, required = [], compact = false }: {
+export function CameraPanel({ camera, required = [], compact = false, autoSend }: {
     camera: AslCamera;
     required?: string[];
     compact?: boolean;
+    autoSend?: { sample: AslSample; status: string };
 }) {
     const id = useId(), [url, setUrl] = useState(camera.url), [provider, setProvider] = useState<BrowserProvider>(camera.provider), [preview, setPreview] = useState(true);
     // Synchronize editable fields when browser storage is hydrated after SSR.
@@ -17,9 +19,10 @@ export function CameraPanel({ camera, required = [], compact = false }: {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => setProvider(camera.provider), [camera.provider]);
     const missing = required.filter(l => !camera.health?.letters.includes(l));
+    const progress = Math.min(1, (autoSend?.sample ?? camera.sample).heldMs / (autoSend ? 3000 : 900));
     return <section className={"asl-camera-panel " + (compact ? "compact" : "")} aria-label="กล้องตรวจอักษร ASL"><div className="asl-panel-heading"><span><Camera size={18}/> กล้องอักษร ASL</span><span className={"asl-badge " + (camera.status === "ready" ? "success" : "")}>{camera.status === "ready" ? "เชื่อมแล้ว" : camera.status === "loading" ? "กำลังเชื่อม" : "ยังไม่เชื่อม"}</span></div>
     <div className={"asl-camera-view " + (!preview ? "preview-hidden" : "")}><video ref={camera.attach} autoPlay muted playsInline aria-label="ภาพกล้องของคุณ"/><div className="asl-camera-frame" aria-hidden="true"/>{camera.status !== "ready" && <div className="asl-camera-placeholder"><HandPlaceholder /><p>{camera.status === "loading" ? "กำลังเตรียมกล้องและโมเดล" : "วางมือหนึ่งข้างไว้กลางกล้อง"}</p></div>}{!preview && camera.status === "ready" && <div className="asl-camera-placeholder"><Camera size={28}/><p>ซ่อนภาพตัวอย่าง · กล้องยังตรวจมืออยู่</p></div>}<span className="asl-camera-tag">{camera.status === "ready" ? "CAMERA ON" : "CAMERA OFF"}</span></div>
-    <div className="asl-detection"><div><small>โมเดลอ่านได้</small><strong>{camera.sample.letter || "—"}</strong></div><div><b>{camera.sample.stable ? "พร้อมยืนยัน" : camera.hint}</b><p>{camera.sample.letter ? "ความมั่นใจ " + Math.round(camera.sample.confidence * 100) + "%" : "รอผลจากโมเดลของคุณ"}</p><div className="asl-hold-meter" role="progressbar" aria-label="ความนิ่งของอักษร" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.min(1, camera.sample.heldMs / 900) * 100)}><span style={{ width: Math.min(1, camera.sample.heldMs / 900) * 100 + "%" }}/></div></div></div>
+    <div className="asl-detection"><div><small>โมเดลอ่านได้</small><strong>{camera.sample.letter || "—"}</strong></div><div><b>{autoSend ? autoSend.status : camera.sample.stable ? "พร้อมยืนยัน" : camera.hint}</b><p>{camera.sample.letter ? "ความมั่นใจ " + (camera.sample.confidence * 100).toFixed(1) + "%" : "รอผลจากโมเดลของคุณ"}</p><div className="asl-hold-meter" role="progressbar" aria-label={autoSend ? "ความมั่นใจเกิน 90% ต่อเนื่อง 3 วินาทีเพื่อส่งอัตโนมัติ" : "ความนิ่งของอักษร"} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}><span style={{ width: progress * 100 + "%" }}/></div></div></div>
     <div className="asl-camera-actions">{camera.status === "ready" ? <button className="asl-button secondary small" onClick={camera.stop}><CameraOff size={16}/>ปิดกล้อง</button> : <button className="asl-button small" onClick={() => void camera.start()} disabled={camera.status === "loading"}><Camera size={16}/>{camera.status === "loading" ? "กำลังเปิด…" : "เชื่อมโมเดลและเปิดกล้อง"}</button>}<button className="asl-icon-button" aria-label="อ่านสถานะกล้อง" onClick={() => speakAloud(camera.sample.letter ? "Letter " + camera.sample.letter : camera.hint, camera.sample.letter ? "en-US" : "th-TH")}><Volume2 size={18}/></button></div>
     {camera.error && <p className="asl-error" role="alert">{camera.error}</p>}
     {camera.health && <p className={missing.length ? "asl-error" : "asl-camera-meta"}>{missing.length ? "โมเดลยังไม่รองรับอักษรของห้อง: " + missing.join(", ") : "รองรับ " + camera.health.letters.length + " อักษร · " + (camera.latency ? camera.latency + " ms" : "พร้อมใช้งาน")}</p>}

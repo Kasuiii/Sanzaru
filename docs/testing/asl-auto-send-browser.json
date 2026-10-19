@@ -1,0 +1,113 @@
+{
+  "createdAt": "2026-10-19T03:31:59.948Z",
+  "description": "Actual production game, real MediaPipe and ONNX. Canvas video repeats a real held-out image; no physical webcam, no injected predictions.",
+  "fixtureLetter": "B",
+  "checks": [
+    {
+      "name": "real high-confidence model predictions are arriving",
+      "passed": true
+    },
+    {
+      "name": "no hand for more than 3 seconds sends nothing",
+      "passed": true
+    },
+    {
+      "name": "an interrupted hold sends nothing",
+      "passed": true
+    },
+    {
+      "name": "fresh continuous hold auto-sends after at least 3 seconds",
+      "passed": true
+    },
+    {
+      "name": "Kikazaru receives the actual predicted letter",
+      "passed": true
+    },
+    {
+      "name": "keeping the same hand up does not resend",
+      "passed": true
+    },
+    {
+      "name": "a new request permits the same letter after a new 3-second hold",
+      "passed": true
+    },
+    {
+      "name": "paused game sends nothing",
+      "passed": true
+    },
+    {
+      "name": "resume requires a fresh 3-second hold",
+      "passed": true
+    },
+    {
+      "name": "Mizaru cannot see the source letter",
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "predictions": 97,
+  "fixture": "20230616_154232_jpg.rf.53f0781fd534f40b53b700d3121ebaca.jpg",
+  "modelSha256": "6b0147a82a49c3845a3f435952d3831ed6a75510670cf584145d9f1cf1ede100",
+  "clientChunks": {
+    "app-elements-H_Dr48wG.js": "d8ccfb80cfa806cf9cae4413268bee663723cbdf183b3f078e93c82c27a6ff88",
+    "app-route-prefetch-policy-DLfs_5O-.js": "979fc9613c8c8cbf3a0e2636f932a1251cce5e4029e291d1d5c03dd875ec3ef6",
+    "app-rsc-cache-busting-Bc1quI_f.js": "3802987e583353b7666de0865331f3b1e609f3dec92b0735e40ea2caccae58f8",
+    "app-rsc-render-mode-CvTCGruk.js": "b9db37ffe7d7e3f76c7e6bdffc078b9da7b799d56513d9bb5387f887b4d658dc",
+    "camera-C4yw__rc.js": "912147f39e6d143db2cfd5a7df39711c898ebcd919698991202f3cffb1477cce",
+    "camera-panel-B6lITYjU.js": "a85ef224142e07aa01779f84f9373beeb9035390c15eced60fa2308d1044079a",
+    "classic-page-azTfPGV1.js": "bfcc09f9e93af8e8d559e5a3de05a22d15a4a056adc7633c0695fe066da903e4",
+    "deployment-id-DFhHa9wO.js": "cff727c88395e970914fe0fd68f0d2f78c51dc9ec13c7b6e6db8e5104ecb240b",
+    "download-ByOhzLAd.js": "19b7d6cfa3e793177ed5475066d61b5f690f644d82f72518e2831464b5becfad",
+    "framework-D_rUT4EX.js": "939d0fabebb3b2f01753bb866b067d8d3384fb06da19f0e6557609d3b1a9f4f7",
+    "game-DTB5u-0u.js": "4965ba2d8bf8181262ae0d2c5bceb6539f4a82dee5823feec48ad31346156b8f",
+    "gesture-inference-DHmdOmbG.js": "20c7e50aa2013252f24c157a51d76b088663a176e54871c7c4ff3abddd1e695a",
+    "hash-Cp347hhd.js": "fba69692645d8206561e12edf1653f0f7931d0f14f8f753ec3be5031dfd004d1",
+    "headers-C_MtfdF4.js": "d84532fc42b9a35aa8ebc1a2659d97cfecc4fc341718a0cf9f7c42f763ced4be",
+    "headphones-DAEC_tsX.js": "88d9c9a008443c1d94013c448fb6304ce735a9d547014f155bf6d99dd923a79b",
+    "home-DYRVyUau.js": "72427d4fcbb6b3c6bafd1450b79fcb313798caaac90dabc212419ead41df0162",
+    "hybrid-client-route-owner-n8F368fa.js": "b34a2245772861f3c54fccb3034a2b2a06613f2a376c7d2f5bc311367e7f0ba4",
+    "Icon-rxLBMRAE.js": "f3426f714786f25ed8a9e72c49b02957d2ff43e926a6c25381c556ef6b2d96d7",
+    "index-x8wPP_16.js": "b080b8ed9e82cd29fd17c6787312888f55b48881fc621ec71738d3c71c5548d1",
+    "keyboard-D6OUCTl6.js": "506d94bd5e265628b73af27fe8f4248529b13f503ca779f47ec50e340db433bd",
+    "layout-segment-context-CkQrnvul.js": "f605d91433602994a0e5aba752ef5ec998e874e934c8689f126a34190b1e5b2e",
+    "learn-nFFksOD8.js": "d7b4d93749be3064d2d071c9b5fa3067d598019a06e111151e1f1437446f79c9",
+    "navigation-errors-D5LMQqDL.js": "8079365b302385be914b5750316813c78cdbb88f897349ecec72f5998fb65500",
+    "protocol-headers-B9-bVeat.js": "9b15d2c8452ddb9df5d6f2cfb3a23dd576a10dc0450fb72565d9f293abab0edd",
+    "query-DWOJKAZx.js": "0a1973f3c6175c2655da2d796c0b590a07352ee8c22aed1a49cd90513fa34b02",
+    "record-uXSNv6cl.js": "b9bdb7b7d0e4844d241dba61104d18111d61ef92af3f137d15749531d276f9cf",
+    "rolldown-runtime-C60lm6uB.js": "5db5ba82eef00d1dee7e86e663098c9427d01183a88d357437daff295aec3e75",
+    "shell-CzukAfB2.js": "f62a71bae413fdb533b1f5e9848735f69979f18e2dfff1b834743383497ef962",
+    "shield-check-CbMO4dut.js": "75f6d3171c3162be1dd2a9d167462d9dd1f0595ab01859c20e8accb6820bce4b",
+    "streamed-icons-DimOoWMi.js": "7eb2a6b44b9c0faa7300c8dd36b0fae7a35d9f65e139dd9046b3df193aa83bc8",
+    "users-DwGmOmcx.js": "d6d4804969afabe5013140a0187706394fa5da3c77e49fb59ed8c805b5c23f77",
+    "wifi-3AofR0Ui.js": "2f81c08ba4a190e562621a498ef3a457903f20fb0bcb0d883236fa78b3510841",
+    "workshop-ByWcFf3_.js": "c48d760b5ff3dccf0200076fa899ee09a09a8dbd4f8b509839bfc848d7fe1566",
+    "x-c5KVunlc.js": "cd5eb4e9bbcff23d81a09a8e631d8902d5f7cd4bcb8ac869668ab6bad06bac7d"
+  },
+  "signs": [
+    {
+      "letter": "B",
+      "confidence": 0.9546605348587036,
+      "heldMs": 3011.3650000095367,
+      "sampleAgeMs": 701.6750000119209,
+      "requestId": "2ddb151a-4518-4155-8521-3af476600659",
+      "status": 200
+    },
+    {
+      "letter": "B",
+      "confidence": 0.9546605348587036,
+      "heldMs": 3309.4950000047684,
+      "sampleAgeMs": 189.34999999403954,
+      "requestId": "1a42c454-4355-4a32-b3e0-2afdbab17c14",
+      "status": 200
+    },
+    {
+      "letter": "B",
+      "confidence": 0.9546605348587036,
+      "heldMs": 3050.794999986887,
+      "sampleAgeMs": 753.9650000035763,
+      "requestId": "9533f226-6994-4c75-ac83-34dc799768e8",
+      "status": 200
+    }
+  ]
+}

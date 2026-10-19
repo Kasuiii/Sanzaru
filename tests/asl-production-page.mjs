@@ -9,7 +9,7 @@ const output=new URL('../docs/testing/asl-production-page.json',import.meta.url)
 let reportWrites=Promise.resolve();
 const report={createdAt:new Date().toISOString(),description:'Actual built /lab and /play with real Worker/runtime/model. getUserMedia is intentionally blocked after model warm-up; no physical camera is accessed.',pages:{},clientChunks:{}};
 const directory=new URL('../dist/client/_next/static/chunks/',import.meta.url);
-for(const file of await readdir(directory))if(file.startsWith('camera-panel-')&&file.endsWith('.js'))report.clientChunks[file]=createHash('sha256').update(await readFile(new URL(file,directory))).digest('hex');
+for(const file of await readdir(directory))if(file.endsWith('.js'))report.clientChunks[file]=createHash('sha256').update(await readFile(new URL(file,directory))).digest('hex');
 const bootstrap=`<script>(function(){
  const result={page:location.pathname,isolated:crossOriginIsolated,workerUrls:[],modelReady:false,cameraBlocked:false,errors:[]};
  const save=()=>fetch('/__worker_probe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(result)});

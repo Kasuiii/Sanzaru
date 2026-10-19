@@ -54,6 +54,7 @@ export type AslState = {
     stage: number;
     challenge: string;
     requested: boolean;
+    requestId?: string;
     signal: AslSignal | null;
     relay: AslRelay | null;
     results: AslResult[];
@@ -83,7 +84,7 @@ export function newAslRoom(code: string, p: AslPlayer, now: number, mode: AslMod
 }
 function requireRole(p: AslPlayer, role: AslRole) { if (p.role !== role)
     throw new AslError("บทบาทนี้ไม่มีสิทธิ์ทำรายการนี้", 403); }
-function nextChallenge(s: AslState) { s.challenge = crypto.randomUUID(); s.requested = false; s.signal = null; s.relay = null; s.feedback = null; s.attempts = 0; }
+function nextChallenge(s: AslState) { s.challenge = crypto.randomUUID(); s.requested = false; s.requestId = ""; s.signal = null; s.relay = null; s.feedback = null; s.attempts = 0; }
 function shuffle(letters: string[]) { const a = [...letters]; for (let i = a.length - 1; i > 0; i--) {
     const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
     [a[i], a[j]] = [a[j], a[i]];
@@ -197,6 +198,9 @@ export function applyAslAction(s: AslState, p: AslPlayer, a: AslAction, now: num
             playing();
             requireRole(p, "kikazaru");
             s.requested = true;
+            s.requestId = a.id;
+            s.signal = null;
+            s.relay = null;
             event(s, "Kikazaru ขออักษรของตราผนึกนี้จาก Iwazaru", now);
             break;
         }
@@ -206,6 +210,14 @@ export function applyAslAction(s: AslState, p: AslPlayer, a: AslAction, now: num
             if (!s.requested)
                 throw new AslError("รอคำขอจาก Kikazaru ก่อน", 409);
             proof(a, s.mode, p);
+            if (s.mode === "ai") {
+                if (!s.requestId || a.requestId !== s.requestId)
+                    throw new AslError("คำขอเปลี่ยนแล้ว รออ่านอักษรใหม่", 409);
+                if (s.signal)
+                    throw new AslError("ส่งอักษรสำหรับคำขอนี้แล้ว ให้ Kikazaru ขอใหม่หากต้องการทวน", 409);
+                if ((a.confidence as number) <= .9 || (a.heldMs as number) < 3000)
+                    throw new AslError("ถืออักษรเดิมที่มั่นใจเกิน 90% ต่อเนื่อง 3 วินาทีก่อนส่ง");
+            }
             s.signal = { id: a.id, letter: a.letter as string, confidence: s.mode === "ai" ? a.confidence as number : 0, at: now };
             s.relay = null;
             event(s, "Iwazaru ส่งอักษรให้ Kikazaru แล้ว", now);
@@ -301,7 +313,7 @@ export function aslView(s: AslState, selfId: string, revision: number, now: numb
     if (!p)
         throw new AslError("คุณไม่ได้อยู่ในห้องนี้", 401);
     const active = s.phase === "playing" || s.phase === "paused";
-    const base = { version: 1 as const, code: s.code, revision, selfId, hostId: s.hostId, role: p.role, phase: s.phase, mode: s.mode, letters: s.letters, stage: s.stage, challenge: s.challenge, requested: s.requested,
+    const base = { version: 1 as const, code: s.code, revision, selfId, hostId: s.hostId, role: p.role, phase: s.phase, mode: s.mode, letters: s.letters, stage: s.stage, challenge: s.challenge, requested: s.requested, requestId: s.requestId || "",
         players: s.players.map(x => ({ id: x.id, name: x.name, role: x.role, ready: x.ready, online: now - x.lastSeen < 20000 })), events: s.events,
         elapsedMs: s.startedAt ? Math.max(0, (s.endedAt || (s.phase === "paused" ? s.pauseAt : now)) - s.startedAt - s.pausedMs) : 0,
         totalAttempts: s.totalAttempts, feedback: p.role === "mizaru" ? s.feedback : null, hasSignal: !!s.signal, hasRelay: !!s.relay };

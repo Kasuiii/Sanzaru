@@ -44,10 +44,10 @@ export class AslStabilizer {
     private started = 0;
     private previous = 0;
     private count = 0;
-    constructor(private threshold = .75) { }
+    constructor(private threshold = .75, private holdMs = 900, private strictlyAbove = false) { }
     reset() { this.letter = null; this.started = 0; this.previous = 0; this.count = 0; }
     observe(letter: string | null, confidence: number, capturedAt: number, now: number): AslSample {
-        if (!isAslLetter(letter) || !Number.isFinite(confidence) || confidence < this.threshold || confidence > 1 || now < capturedAt || now - capturedAt > 1500) {
+        if (!isAslLetter(letter) || !Number.isFinite(confidence) || !Number.isFinite(capturedAt) || !Number.isFinite(now) || confidence < this.threshold || (this.strictlyAbove && confidence === this.threshold) || confidence > 1 || now < capturedAt || now - capturedAt > 1500) {
             this.reset();
             return emptyAslSample();
         }
@@ -59,7 +59,7 @@ export class AslStabilizer {
         this.count++;
         this.previous = capturedAt;
         const heldMs = Math.min(30000, Math.max(0, capturedAt - this.started));
-        return { letter, confidence, heldMs, at: capturedAt, stable: this.count >= 3 && heldMs >= 900 };
+        return { letter, confidence, heldMs, at: capturedAt, stable: this.count >= 3 && heldMs >= this.holdMs };
     }
 }
 export function sampleProof(s: AslSample, now: number) { if (!s.stable || !s.letter || now - s.at < 0 || now - s.at > 1500)

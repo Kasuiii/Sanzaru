@@ -11,16 +11,17 @@ A–Z + nothing (ไม่ส่งคำตอบ), input 384×384 (มี 640�
 5. เปิด http://localhost:8787/lab แล้วเชื่อมโมเดลและเปิดกล้อง
 
 Deploy จาก source: อ่าน DEPLOY-CLOUDFLARE-TH.md
-Deploy จาก ZIP ที่ build แล้ว: แตก release/sanzaru-onnx-performance.zip (ไฟล์ในเครื่อง ไม่ได้รวมใน Git)
+Deploy จาก ZIP ที่ build แล้ว: แตก release/sanzaru-onnx-auto-send.zip (ไฟล์ในเครื่อง ไม่ได้รวมใน Git)
 แล้วอ่าน DEPLOY-THIS-BUNDLE-TH.md ภายใน
 
 ต้องใส่ D1 database_id และ R2 bucket ของบัญชีคุณก่อน deploy
-อัปเดตเว็บเดิมด้วย config เดิม ตาม PERFORMANCE-ASL-TH.md
+อัปเดตเว็บเดิมด้วย config เดิม ตาม AUTO-SEND-ASL-TH.md ไม่ต้องเพิ่ม migration สำหรับการส่งอัตโนมัติ
 
 MODEL-REPORT-TH.md: รุ่นโมเดล/hash/ผลทดสอบจริงและข้อจำกัด
 ONNX-RUNTIME-WEB-TH.md: คำอธิบายโค้ดและลำดับการประมวลผล
 ASL-SETUP-TH.md: วิธี export ใหม่เมื่อเปลี่ยนโมเดล
 TESTING.md: ผลทดสอบระบบทั้งหมด
+AUTO-SEND-ASL-TH.md: ส่งอักษรที่มั่นใจเกิน 90% ต่อเนื่อง 3 วินาทีและการใช้ MediaPipe ควบคู่
 
 MediaPipe ใช้หาตำแหน่งมือ ส่วน ONNX ใช้จำแนกอักษร ASL
 รูปแบบการเล่น: Iwazaru ทำอักษร > Kikazaru ส่งเสียง > Mizaru ทำอักษรตอบ

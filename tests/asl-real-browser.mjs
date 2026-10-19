@@ -59,14 +59,19 @@ createServer(async(req,res)=>{
  try{
   const url=new URL(req.url,'http://127.0.0.1'),path=url.pathname;res.setHeader('Cache-Control','no-store');
   if(!url.searchParams.has('single')){res.setHeader('Cross-Origin-Opener-Policy','same-origin');res.setHeader('Cross-Origin-Embedder-Policy','require-corp');}
-  if(path==='/results'&&req.method==='POST'){
+  if(['/results','/pipeline-results'].includes(path)&&req.method==='POST'){
    if(req.headers.origin!=='http://127.0.0.1:8792') {res.writeHead(403);return res.end();}
    let body='';for await(const chunk of req){body+=chunk;if(body.length>500000)throw Error('Report too large');}
    const result=JSON.parse(body);if(result.modelSha256!==manifest.sha256)throw Error('Wrong model report');
-   await writeFile(new URL('docs/testing/'+(result.isolated?'asl-browser-validation.json':'asl-browser-single-thread.json'),root),JSON.stringify(result,null,2)+'\n');
+   const filename=path==='/pipeline-results'?'asl-pipeline-validation.json':result.isolated?'asl-browser-validation.json':'asl-browser-single-thread.json';
+   await writeFile(new URL('docs/testing/'+filename,root),JSON.stringify(result,null,2)+'\n');
    return res.end('Saved');
   }
   if(path==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');return res.end(html);}
+  if(path==='/pipeline'){res.setHeader('Content-Type','text/html; charset=utf-8');return res.end(await readFile(new URL('tests/asl-pipeline-browser.html',root)));}
+  if(path==='/hand-bounds.js'){
+   res.setHeader('Content-Type','text/javascript');return res.end(ts.transpileModule(await readFile(new URL('lib/gesture-inference.ts',root),'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText);
+  }
   if(path==='/reference.json'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify(report));}
   if(path==='/reference-manifest.json'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify({...manifest,model:'/models/asl/'+manifest.model,inputMode:'full-frame',mirror:false}));}
   if(path==='/client.js'){
@@ -74,6 +79,7 @@ createServer(async(req,res)=>{
    res.setHeader('Content-Type','text/javascript');return res.end(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText);
   }
   let target;
+  if(/^\/vision\/[a-zA-Z0-9_.-]+$/.test(path)&&!path.includes('..'))target=new URL('dist/client'+path,root);
   if(path.startsWith('/prepared/')&&report.samples.some(s=>path==='/prepared/'+s.prepared))target=new URL('.sites-runtime/asl-validation/'+path.split('/').at(-1),root);
   if(path.startsWith('/original/')&&report.samples.some(s=>path==='/original/'+s.file))target=new URL('ASL.v2-aslv2.yolo26/test/images/'+path.split('/').at(-1),root);
   if(path==='/_next/static/'+worker||path==='/models/asl/manifest.json'||path==='/models/asl/'+manifest.model||(/^\/onnx\/[a-zA-Z0-9/_.-]+$/.test(path)&&!path.includes('..')))target=new URL('dist/client'+path,root);

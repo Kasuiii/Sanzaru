@@ -83,10 +83,20 @@ await action(iw,'settings',{mode:'ai',letters:['A','B','C','L','Y']});const caps
 await action(ki,'ready',{ready:true,capabilities:['A'],modelId},409);
 await action(iw,'ready',{ready:true});await action(ki,'ready',{ready:true,capabilities:caps,modelId});await action(mi,'ready',{ready:true,capabilities:caps,modelId:'b'.repeat(64)});await action(iw,'start',{},409);
 await action(mi,'ready',{ready:true,capabilities:caps,modelId});await action(iw,'start');room=await sync(mi);await action(iw,'request',{challenge:room.challenge});
-const valid={challenge:room.challenge,letter:room.target,source:'ai',modelId,confidence:.5,heldMs:1000,sampleAgeMs:100};
+room=await sync(mi);
+const valid={challenge:room.challenge,requestId:room.requestId,letter:room.target,source:'ai',modelId,confidence:.95,heldMs:3000,sampleAgeMs:100};
 for(const bad of [{source:'practice'},{confidence:.499},{heldMs:0},{sampleAgeMs:1600},{letter:'J'},{letter:'Z'},{modelId:'b'.repeat(64)}])await action(mi,'sign',{...valid,...bad},bad.source||bad.modelId?409:400);
-await action(mi,'sign',valid);const signal=(await sync(iw)).signal;
-await action(iw,'relay',{challenge:room.challenge,sourceId:signal.id});await action(ki,'answer',valid);assert.equal((await sync(ki)).stage,1);
+for(const bad of [{confidence:.9},{heldMs:2999},{requestId:randomUUID()}])await action(mi,'sign',{...valid,...bad},bad.requestId?409:400);
+const signedId=randomUUID();await action(mi,'sign',{...valid,id:signedId});
+await action(mi,'sign',{...valid,id:signedId}); // Same network retry is idempotent.
+await action(mi,'sign',valid,409); // A new command cannot overwrite this request.
+const firstSignal=(await sync(iw)).signal;
+await action(iw,'relay',{challenge:room.challenge,sourceId:firstSignal.id});
+await action(iw,'request',{challenge:room.challenge});
+const requestedAgain=await sync(mi);assert.equal(requestedAgain.hasSignal,false);assert.equal(requestedAgain.hasRelay,false);
+await action(mi,'sign',valid,409,'old request cannot race a newer request');
+await action(mi,'sign',{...valid,requestId:requestedAgain.requestId});const signal=(await sync(iw)).signal;
+await action(iw,'relay',{challenge:room.challenge,sourceId:signal.id});await action(ki,'answer',{...valid,confidence:.5,heldMs:1000});assert.equal((await sync(ki)).stage,1);
 await action(mi,'leave');assert.equal((await sync(iw)).phase,'paused');await action(iw,'resume',{},409);await action(iw,'rematch');await request(stranger,{op:'join',code,name:'Replacement',role:'iwazaru'});assert.equal((await sync(iw)).players.length,3);
 // Boundary checks bypass helper to preserve invalid raw requests.
 const cross=await POST(new Request(base+'/api/asl',{method:'POST',headers:{Origin:'https://other.invalid'},body:'{}'}));assert.equal(cross.status,403);
@@ -106,9 +116,9 @@ await action(ki,'ready',{ready:true});
 await action(mi,'ready',{ready:true,capabilities:alphabetWithMotionClasses,modelId});
 await action(iw,'start');
 for(let stage=0;stage<5;stage++){
-  const r=await sync(iw),evidence={challenge:r.challenge,letter:r.target,source:'ai',modelId,confidence:.95,heldMs:1000,sampleAgeMs:100};
+  const r=await sync(iw),evidence={challenge:r.challenge,letter:r.target,source:'ai',modelId,confidence:.95,heldMs:3000,sampleAgeMs:100};
   await action(ki,'request',{challenge:r.challenge});
-  await action(iw,'sign',evidence);
+  await action(iw,'sign',{...evidence,requestId:(await sync(iw)).requestId});
   await action(ki,'relay',{challenge:r.challenge,sourceId:(await sync(ki)).signal.id});
   await action(mi,'answer',evidence);
 }

@@ -38,11 +38,21 @@ def main():
             stale_chunks.append(filename)
     if stale_chunks and not (args.allow_stale_page_report or "").strip():
         raise SystemExit("Production-page browser report is stale; rerun it or explicitly record a release exception")
+    auto_report = json.loads((ROOT / "docs/testing/asl-auto-send-browser.json").read_text())
+    if not auto_report.get("passed") or auto_report.get("modelSha256") != model_report["modelSha256"]:
+        raise SystemExit("A passing real-model auto-send browser report is required")
+    for filename, digest in auto_report.get("clientChunks", {}).items():
+        path = ROOT / "dist/client/_next/static/chunks" / filename
+        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+            raise SystemExit("Auto-send browser report does not match this build")
+    if not auto_report.get("clientChunks"):
+        raise SystemExit("Auto-send report must identify the tested client chunks")
     packaging_report = {
         "createdAt": datetime.now(timezone.utc).isoformat(),
         "modelSha256": model_report["modelSha256"],
         "deployAssetChecksPassed": True,
         "modelBrowserReportPassed": True,
+        "autoSendBrowserReportPassed": True,
         "productionPageReportMatchesBuild": not stale_chunks,
         "productionPageReportCreatedAt": page_report.get("createdAt"),
         "stalePageReportChunks": stale_chunks,
@@ -63,7 +73,9 @@ def main():
                      "WORKER-URL-FIX-TH.md", "docs/testing/asl-production-page.json", "docs/testing/asl-production-play.png",
                      "PERFORMANCE-ASL-TH.md", "docs/testing/asl-model-validation-640.json", "docs/testing/asl-browser-validation-640.json",
                      "docs/testing/asl-browser-single-thread.json", "docs/testing/asl-browser-before-performance.json",
-                     "docs/testing/asl-distance-diagnostic-384.json"):
+                     "docs/testing/asl-distance-diagnostic-384.json", "AUTO-SEND-ASL-TH.md",
+                     "docs/testing/asl-pipeline-validation.json", "docs/testing/asl-auto-send-browser.json",
+                     "docs/testing/asl-auto-send-browser.png"):
         path = ROOT / filename
         # The owner's explanatory Markdown is local-only; a fresh clone has README.md.
         if path.suffix == ".md" and filename != "README.md" and not path.is_file():

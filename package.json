@@ -14,7 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "db:local": "node scripts/local-db.mjs",
     "setup:local": "node scripts/run-framework.mjs build && node scripts/local-db.mjs",
-    "test": "node tests/ritual.test.mjs && node tests/game.test.mjs && node tests/party.test.mjs && node tests/party-api.test.mjs && node tests/learning.test.mjs && node tests/learning-ui.test.mjs && node tests/gesture-inference.test.mjs && node tests/asl.test.mjs && node tests/asl-inference.test.mjs && node tests/asl-onnx.test.mjs && node tests/asl-worker-url.test.mjs",
+    "test": "node tests/ritual.test.mjs && node tests/game.test.mjs && node tests/party.test.mjs && node tests/party-api.test.mjs && node tests/learning.test.mjs && node tests/learning-ui.test.mjs && node tests/gesture-inference.test.mjs && node tests/asl.test.mjs && node tests/asl-inference.test.mjs && node tests/asl-auto-send.test.mjs && node tests/asl-onnx.test.mjs && node tests/asl-worker-url.test.mjs",
     "typecheck": "tsc --noEmit",
     "test:local": "node tests/local-smoke.mjs",
     "prepare:onnx": "node scripts/prepare-onnx.mjs",
